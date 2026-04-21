@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Application/Application.csproj" />
+  <Project Path="Domain/Domain.csproj" />
+  <Project Path="Grpc.Contract/Grpc.Contract.csproj" />
+  <Project Path="Grpc/Grpc.csproj" />
+  <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="WebUI/WebUI.csproj" />
+</Solution>

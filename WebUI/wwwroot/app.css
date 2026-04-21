@@ -1,0 +1,57 @@
+/*
+:root {
+    --shopee-orange: #EE4D2D;
+    --shopee-bg: #F5F5F5;
+}
+
+.shopee-header {
+    background: var(--shopee-orange) !important;
+    height: 120px !important;
+    display: flex;
+    align-items: center;
+}
+
+.shopee-search-field .mud-input-outlined-border {
+    background-color: white !important;
+    border: none !important;
+}
+
+.shopee-search-field .mud-input-control {
+    margin-top: 0 !important;
+}
+
+.flash-sale-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.flash-sale-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.product-card {
+    height: 100%;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    border: 1px solid var(--shopee-orange);
+}
+
+.category-icon-container {
+    width: 45px;
+    height: 45px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+
+*/

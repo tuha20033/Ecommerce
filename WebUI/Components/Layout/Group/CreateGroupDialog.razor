@@ -1,0 +1,61 @@
+﻿@using Application.DTOs
+@using Application.Features.Group.Commands.CreateGroupCommandsandHandler
+@using MediatR
+@inject IMediator _mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" />
+            Tạo nhóm
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+
+            <MudTextField Label="Tên nhóm"
+                          @bind-Value="group.name"
+                          Required="true" />
+
+            <MudTextField Label="Mô tả"
+                          @bind-Value="group.description" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="SaveGroup"
+                       Class="mt-3">
+                Lưu
+            </MudButton>
+
+        </MudForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    private MudForm form;
+    private bool isValid;
+
+    private GroupDTO group = new();
+
+    private async Task SaveGroup()
+    {
+        await form.Validate();
+
+        if (!isValid) return;
+
+        var command = new CreateGroupCommands()
+        {
+            Name = group.name,
+            Description = group.description
+        };
+
+        await _mediator.Send(command);
+
+        Snackbar.Add("Tạo nhóm thành công", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

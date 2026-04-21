@@ -1,0 +1,118 @@
+﻿@using Application.DTOs
+@using Application.Features.Product.Commands.CreateProductCommandandHandler
+@using Application.Features.Product.Commands.UpdateProduct
+@using Application.Features.Product.Commands.UpdateProductCommandandHandler
+@using Application.Features.Product.Queries.GetProductById
+@using MediatR
+@using System.Threading.Tasks
+@inject ISnackbar Snackbar
+@inject IMediator _mediator
+@using MudBlazor
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" />
+            @((Id == Guid.Empty) ? "Thêm mới" : "Chỉnh sửa")
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+
+            <MudTextField Label="Tên sản phẩm"
+                          @bind-Value="product.Name"
+                          Required="true" />
+
+            <MudTextField Label="Mã sản phẩm"
+                          @bind-Value="product.ProductCode"
+                          Required="true" />
+
+            <MudTextField Label="Mô tả"
+                          @bind-Value="product.Description" />
+
+            <MudTextField Label="Giá"
+                          @bind-Value="product.Price"
+                          Required="true" />
+
+            <MudTextField Label="Tồn kho"
+                          @bind-Value="product.WareHouse"
+                          Required="true" />
+
+            <MudTextField Label="Image Url"
+                          @bind-Value="product.ImageUrl" />
+
+            <MudTextField Label="GroupId"
+                          @bind-Value="product.GroupId"
+                          Required="true" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="SaveProduct"
+                       Class="mt-3">
+                Lưu
+            </MudButton>
+
+        </MudForm>
+    </DialogContent>
+</MudDialog>
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Guid Id { get; set; }
+
+    private ProductDTO product = new ProductDTO();
+    private MudForm form;
+    private bool isValid;
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != Guid.Empty)
+        {
+            var query = new GetProductByIdQuery() { Id = Id };
+            product = await _mediator.Send(query);
+            StateHasChanged();
+        }
+    }
+    private async Task SaveProduct()
+    {
+        await form.Validate();
+        if (product.GroupId == Guid.Empty)
+        {
+            Snackbar.Add("Vui lòng chọn nhóm", Severity.Warning);
+            return;
+        }
+        if (isValid)
+        {
+        
+            if (Id != Guid.Empty)
+            {
+                var command = new UpdateProductCommand()
+                {
+                    Id = Id,
+                    Name = product.Name,
+                    ProductCode = product.ProductCode,
+                    Description = product.Description,
+                    Price = product.Price,
+                    ImageUrl = product.ImageUrl,
+                    WareHouse = product.WareHouse,
+                    GroupId = product.GroupId
+                };
+                await _mediator.Send(command);
+            }
+            else
+            {
+                var command = new CreateProductCommands()
+                {
+                    Name = product.Name,
+                    ProductCode = product.ProductCode,
+                    Description = product.Description,
+                    Price = product.Price,
+                    ImageUrl = product.ImageUrl,
+                    WareHouse = product.WareHouse,
+                    GroupId = product.GroupId
+                };
+                await _mediator.Send(command);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+}
