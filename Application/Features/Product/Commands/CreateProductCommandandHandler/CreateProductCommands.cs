@@ -12,7 +12,8 @@ namespace Application.Features.Product.Commands.CreateProductCommandandHandler
         public string? ImageUrl { get; set; }
         public int WareHouse { get; set; }
         public Guid GroupId { get; set; }
-      
+        public Guid WarehouseId { get; set; }
+
 
 
     }

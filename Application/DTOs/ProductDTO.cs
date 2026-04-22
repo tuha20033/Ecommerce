@@ -9,6 +9,7 @@ public class ProductDTO
     public string? Description { get; set; }
     public decimal Price { get; set; }
     public int WareHouse { get; set; }
+    public Guid WarehouseId { get; set; }
     public Guid GroupId { get; set; }
     public string GroupName { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }

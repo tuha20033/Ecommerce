@@ -83,7 +83,7 @@
     private async  Task LoadData()
     {
         var query = new GetAllProductsQuery();
-        var product = await Mediator.Send(query);
+        products = await Mediator.Send(query);
     }
     protected override async Task OnInitializedAsync()
     {

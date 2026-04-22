@@ -1,8 +1,10 @@
 ﻿@using Application.DTOs
+@using Application.Features.Group.Queries.GetAllGroups
 @using Application.Features.Product.Commands.CreateProductCommandandHandler
 @using Application.Features.Product.Commands.UpdateProduct
 @using Application.Features.Product.Commands.UpdateProductCommandandHandler
 @using Application.Features.Product.Queries.GetProductById
+@using Application.Features.Warehouse.Queries.GetAllWarehouse
 @using MediatR
 @using System.Threading.Tasks
 @inject ISnackbar Snackbar
@@ -33,7 +35,7 @@
             <MudTextField Label="Giá"
                           @bind-Value="product.Price"
                           Required="true" />
-
+                      
             <MudTextField Label="Tồn kho"
                           @bind-Value="product.WareHouse"
                           Required="true" />
@@ -41,10 +43,30 @@
             <MudTextField Label="Image Url"
                           @bind-Value="product.ImageUrl" />
 
-            <MudTextField Label="GroupId"
-                          @bind-Value="product.GroupId"
-                          Required="true" />
+         
+            <MudSelect T="Guid"
+                       Label="Kho"
+                       @bind-Value="product.WarehouseId"
+                       Required="true"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="Guid" Value="Guid.Empty" Disabled="true">-- Chọn kho --</MudSelectItem>
+                @foreach (var warehouse in WareHouse)
+                {
+                    <MudSelectItem T="Guid" Value="@warehouse.Id">@warehouse.Name</MudSelectItem>
+                }
+            </MudSelect>
 
+            <MudSelect T="Guid"
+                       Label="Nhóm"
+                       @bind-Value="product.GroupId"
+                       Required="true"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="Guid" Value="Guid.Empty" Disabled="true">-- Chọn nhóm --</MudSelectItem>
+                @foreach (var group in groups)
+                {
+                    <MudSelectItem T="Guid" Value="@group.Id">@group.name</MudSelectItem>
+                }
+            </MudSelect>
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        OnClick="SaveProduct"
@@ -60,10 +82,17 @@
     [Parameter] public Guid Id { get; set; }
 
     private ProductDTO product = new ProductDTO();
+    private List<WarehouseDTO> WareHouse = new ();
+    private List<GroupDTO> groups = new ();
     private MudForm form;
     private bool isValid;
     protected override async Task OnInitializedAsync()
     {
+        var warehouseQuery = new GetAllWarehouseQuery();
+        WareHouse = await _mediator.Send(warehouseQuery);
+
+        var groupquery = new GetAllGroupQuery();
+        groups = await _mediator.Send(groupquery);
         if (Id != Guid.Empty)
         {
             var query = new GetProductByIdQuery() { Id = Id };
@@ -79,40 +108,48 @@
             Snackbar.Add("Vui lòng chọn nhóm", Severity.Warning);
             return;
         }
-        if (isValid)
-        {
-        
-            if (Id != Guid.Empty)
+    if (product.WarehouseId == Guid.Empty)
+{
+    Snackbar.Add("Vui lòng chọn kho", Severity.Warning);
+    return;
+}
+            if (isValid)
             {
-                var command = new UpdateProductCommand()
+
+                if (Id != Guid.Empty)
                 {
-                    Id = Id,
-                    Name = product.Name,
-                    ProductCode = product.ProductCode,
-                    Description = product.Description,
-                    Price = product.Price,
-                    ImageUrl = product.ImageUrl,
-                    WareHouse = product.WareHouse,
-                    GroupId = product.GroupId
-                };
-                await _mediator.Send(command);
-            }
-            else
-            {
-                var command = new CreateProductCommands()
+                    var command = new UpdateProductCommand()
+                        {
+                            Id = Id,
+                            Name = product.Name,
+                            ProductCode = product.ProductCode,
+                            Description = product.Description,
+                            Price = product.Price,
+                            ImageUrl = product.ImageUrl,
+                            WareHouse = product.WareHouse,
+                            GroupId = product.GroupId,
+                         
+                        };
+                    await _mediator.Send(command);
+                }
+                else
                 {
-                    Name = product.Name,
-                    ProductCode = product.ProductCode,
-                    Description = product.Description,
-                    Price = product.Price,
-                    ImageUrl = product.ImageUrl,
-                    WareHouse = product.WareHouse,
-                    GroupId = product.GroupId
-                };
-                await _mediator.Send(command);
+                    var command = new CreateProductCommands()
+                        {
+                            Name = product.Name,
+                            ProductCode = product.ProductCode,
+                            Description = product.Description,
+                            Price = product.Price,
+                            ImageUrl = product.ImageUrl,
+                            WareHouse = product.WareHouse,
+                            GroupId = product.GroupId,
+                            WarehouseId = product.WarehouseId
+                        };
+                    await _mediator.Send(command);
+                }
+                MudDialog.Close(DialogResult.Ok(true));
             }
-            MudDialog.Close(DialogResult.Ok(true));
-        }
+       
     }
 
 }

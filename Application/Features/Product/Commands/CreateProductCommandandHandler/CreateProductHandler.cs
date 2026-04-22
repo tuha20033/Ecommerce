@@ -23,14 +23,15 @@ namespace Application.Features.Product.Commands.CreateProductCommandandHandler
                 throw new Exception("Chưa chọn nhóm sản phẩm");
 
             var existingProduct = await _productRepository.GetByCodeAsync(request.ProductCode, cancellationToken);
-            if (existingProduct is  null )
+            if (existingProduct is not  null )
             {
-                throw new Exception("Product with the same code already exists.");
+                throw new Exception("mã sản phẩm đã tồn tại .");
             }
             var product = _mapper.Map<Domain.Entities.Product>(request);
             product.InventoryItem =  new Domain.Entities.InventoryItem
             {
                 Quantity = request.WareHouse,
+                WarehouseId= request.WarehouseId
        
             };
             await _productRepository.AddAsync(product, cancellationToken);
