@@ -1,5 +1,120 @@
-﻿<h3>CustomerEdit</h3>
+﻿@* @using Application.DTOs
+@using Application.Features.Customer.Commands.CreateCustomer
+@using Application.Features.Customer.Commands.UpdateCustomerCommandandHandler
+@using Application.Features.Customer.Queries.GetCustomerById
+@using Application.Features.Group.Queries.GetAllGroups
+@using Application.Features.Product.Commands.CreateProductCommandandHandler
+@using Application.Features.Product.Commands.UpdateProduct
+@using Application.Features.Product.Commands.UpdateProductCommandandHandler
+@using Application.Features.Product.Queries.GetProductById
+@using Application.Features.Warehouse.Queries.GetAllWarehouse
+@using MediatR
+@using System.Threading.Tasks
+@inject ISnackbar Snackbar
+@inject IMediator _mediator
+@using MudBlazor
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" />
+            @((Id == Guid.Empty) ? "Thêm mới" : "Chỉnh sửa")
+        </MudText>
+    </TitleContent>
 
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+
+            <MudTextField Label="Họ và Tên"
+                          @bind-Value="customer.FullName"
+                          Required="true" />
+
+            <MudTextField Label="Số điện thoại"
+                          @bind-Value="customer.Phone"
+                          Required="true" />
+
+            <MudTextField Label="Email"
+                          @bind-Value="customer.Email" />
+
+            <MudTextField Label="Ảnh Đại diện "
+                          @bind-Value="customer.AvatarUrl"
+                          Required="true" />
+
+            <MudTextField Label="Sinh Nhật "
+                          @bind-Value="customer.DateOfBirth"
+                          Required="true" />
+
+           
+
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="SaveCustomer"
+                       Class="mt-3">
+                Lưu
+            </MudButton>
+
+        </MudForm>
+    </DialogContent>
+</MudDialog>
 @code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Guid Id { get; set; }
 
-}
+    private CustomerDTO customer = new CustomerDTO();
+    // private List<WarehouseDTO> WareHouse = new();
+    // private List<GroupDTO> groups = new();
+    private MudForm form;
+    private bool isValid;
+    protected override async Task OnInitializedAsync()
+     {
+    //     var warehouseQuery = new GetAllWarehouseQuery();
+    //     WareHouse = await _mediator.Send(warehouseQuery);
+
+    //     var groupquery = new GetAllGroupQuery();
+    //     groups = await _mediator.Send(groupquery);
+        if (Id != Guid.Empty)
+        {
+            var query = new GetCustomerByIdQuery() { Id = Id };
+            customer = await _mediator.Send(query);
+            StateHasChanged();
+        }
+    }
+    private async Task SaveCustomer()
+    {
+        await form.Validate();
+      
+        if (isValid)
+        {
+
+            if (Id != Guid.Empty)
+            {
+                var command = new UpdateCustomerCommand()
+                {
+                    Id = Id,
+                    FullName = customer.FullName,
+                    Email = customer.Email,
+                    Phone = customer.Phone,
+                    DateOfBirth = customer.DateOfBirth,
+                    AvatarUrl = customer.AvatarUrl
+
+                };
+                await _mediator.Send(command);
+            }
+            else
+            {
+                var command = new CreateCustomerCommand()
+                {
+                    FullName = customer.FullName,
+                    Email = customer.Email,
+                    Phone = customer.Phone,
+                    DateOfBirth = customer.DateOfBirth,
+                    AvatarUrl = customer.AvatarUrl
+                };
+                await _mediator.Send(command);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+
+    }
+
+} *@

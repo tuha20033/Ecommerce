@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+
+using MediatR;
 
 namespace Application.Features.Customer.Commands.DeleteCustomerCommandandHandler
 {
-    internal class DeleteCustomerCommand
+    public  class DeleteCustomerCommand : IRequest<Guid>
     {
+        public Guid Id { get; set; }
+
     }
 }

@@ -1,5 +1,143 @@
-﻿<h3>CustomerList</h3>
+﻿@* @page "/"
+@using Application.DTOs
+@using Application.Features.Product.Commands.DeleteProductCommandandHandler
+@using Application.Features.Product.Queries.GetAllProducts
+@using MediatR
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using WebUI.Components.Layout.Group
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+<MudTable Items="@products" Dense="@dense" Hover="@hover" Bordered="@bordered"
+          Striped="@striped" Filter="FilterFunc" @bind-SelectedItem="selectedItem">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Danh sách sản phẩm</MudText>
+
+        <MudSpacer />
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="@(() => OpenDialog(Guid.Empty))">
+            Thêm sản phẩm
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Secondary"
+                   OnClick="OpenCreateGroupDialog"
+                   Class="ml-2">
+            Thêm nhóm
+        </MudButton>
+        <MudTextField @bind-Value="searchString"
+                      Placeholder="Search"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Class="mt-0 ml-2" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Tên</MudTh>
+        <MudTh>Code</MudTh>
+        <MudTh>Giá</MudTh>
+        <MudTh>Mô Tả</MudTh>
+        <MudTh>Tồn kho</MudTh>
+        <MudTh>Nhóm</MudTh>
+        <MudTh>Action</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.ProductCode</MudTd>
+        <MudTd>@context.Price</MudTd>
+        <MudTd>@context.Description</MudTd>
+        <MudTd>@context.WareHouse</MudTd>
+        <MudTd>@context.GroupName</MudTd>
+        <MudTd>
+
+            <MudButton Color="Color.Primary"
+                       OnClick="@(() => OpenDialog(context.Id))">
+                Edit
+            </MudButton>
+
+            <MudButton Color="Color.Error"
+                       OnClick="@(() => Delete(context.Id))"
+                       Class="ml-2">
+                Delete
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
 
 @code {
+    private List<ProductDTO> products = new();
+    private ProductDTO? selectedItem;
 
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+
+    private string searchString = "";
+    private async Task LoadData()
+    {
+        var query = new GetAllProductsQuery();
+        products = await Mediator.Send(query);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private bool FilterFunc(ProductDTO product)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        return product.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || product.ProductCode.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || product.GroupName.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+    }
+    private async Task OpenDialog(Guid id)
+    {
+        var parameters = new DialogParameters { ["Id"] = id };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseOnEscapeKey = true
+        };
+        var dialog = await DialogService.ShowAsync<CustomerEdit>("Product", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+    private async Task Delete(Guid id)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Bạn có chắc muốn xóa không?");
+
+        if (confirm)
+        {
+            var command = new DeleteProductCommand { Id = id };
+            await Mediator.Send(command);
+
+            await LoadData();
+        }
+    }
+
+    private async Task OpenCreateGroupDialog()
+    {
+        var dialog = await DialogService.ShowAsync<CreateGroupDialog>("Tạo nhóm");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Tạo nhóm thành công", Severity.Success);
+            await LoadData();
+        }
+    }
 }
+ *@

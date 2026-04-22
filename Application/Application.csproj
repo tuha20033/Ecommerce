@@ -20,4 +20,11 @@
     <PackageReference Include="MediatR" Version="14.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Adress\Commands\DeleteAdressCommandandHandler\" />
+    <Folder Include="Features\Adress\Commands\UpdateAdressCommandandHandler\" />
+    <Folder Include="Features\Shipment\" />
+    <Folder Include="Features\Payment\" />
+  </ItemGroup>
+
 </Project>
