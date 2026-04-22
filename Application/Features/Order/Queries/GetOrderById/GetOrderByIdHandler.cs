@@ -1,5 +1,5 @@
 using Application.Abstractions.Repositories;
-using Application.DTOs;
+using Application.DTOs.Order.ViewOrder;
 using AutoMapper;
 using MediatR;
 

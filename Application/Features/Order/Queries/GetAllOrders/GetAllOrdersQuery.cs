@@ -1,4 +1,4 @@
-using Application.DTOs;
+using Application.DTOs.Order.ViewOrder;
 using MediatR;
 
 namespace Application.Features.Order.Queries.GetAllOrders

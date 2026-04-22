@@ -9,4 +9,5 @@ public class CustomerDTO
     public DateTime? DateOfBirth { get; set; }
     public string? AvatarUrl { get; set; }
     public string? UserId { get; set; }
+    public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 }

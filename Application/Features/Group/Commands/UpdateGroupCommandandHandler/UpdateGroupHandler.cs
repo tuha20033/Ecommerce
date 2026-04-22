@@ -25,8 +25,11 @@ namespace Application.Features.Group.Commands.UpdateGroupCommandandHandler
                 {
                  return false;
                 }
-                _mapper.Map(request, group);
-                 await   _groupRepository.UpdateAsync(group, cancellationToken);
+                //_mapper.Map(request, group);
+            group.Name = request.Name;
+            group.Description = request.Description;
+            group.ParentId = request.ParentId;
+            await   _groupRepository.UpdateAsync(group, cancellationToken);
                 var result = await _unitOfWork.SaveChangesAsync(cancellationToken);
             //return result > 0;
             return true;

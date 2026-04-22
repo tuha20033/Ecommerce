@@ -1,5 +1,6 @@
 ﻿
 using Application.Features.Group.Commands.CreateGroupCommandsandHandler;
+using Application.Features.Group.Commands.UpdateGroupCommandandHandler;
 
 namespace Application.Mappings
 {
@@ -9,6 +10,7 @@ namespace Application.Mappings
         {
             CreateMap<Domain.Entities.Group, Application.DTOs.GroupDTO>().ReverseMap();
             CreateMap<CreateGroupCommands, Domain.Entities.Group>();
+            //CreateMap<UpdateGroupCommand, Domain.Entities.Group>();
         }
     }
 }

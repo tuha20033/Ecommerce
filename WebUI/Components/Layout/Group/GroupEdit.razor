@@ -1,4 +1,7 @@
 ﻿@using Application.DTOs
+@using Application.Features.Group.Commands.CreateGroupCommandsandHandler
+@using Application.Features.Group.Commands.UpdateGroupCommandandHandler
+@using Application.Features.Group.Queries.GetByIds
 @using Application.Features.Warehouse.Commands.CreateWarehouseCommandandHandler
 @using Application.Features.Warehouse.Commands.UpdateWarehouseCommandandHandler
 @using Application.Features.Warehouse.Queries.GetByIdWarehouses
@@ -10,24 +13,17 @@
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.Warehouse" />
-            @((Id == Guid.Empty) ? "Thêm kho" : "Chỉnh sửa kho")
+            @((Id == Guid.Empty) ? "Thêm nhóm" : "Chỉnh sửa nhóm")
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="isValid">
             <MudTextField Label="Tên kho"
-                          @bind-Value="warehouse.Name"
+                          @bind-Value="group.name"
                           Required="true" />
             <MudTextField Label="Địa chỉ"
-                          @bind-Value="warehouse.Address"
+                          @bind-Value="group.description"
                           Class="mt-2" />
-            <MudTextField Label="Số điện thoại"
-                          @bind-Value="warehouse.Phone"
-                          Class="mt-2" />
-            <MudSwitch @bind-Value="warehouse.IsActive"
-                       Color="Color.Primary"
-                       Label="Đang hoạt động"
-                       Class="mt-2" />
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        OnClick="Save"
@@ -44,13 +40,13 @@
 
     private MudForm form;
     private bool isValid;
-    private WarehouseDTO warehouse = new() { IsActive = true };
+    private GroupDTO group = new();
     protected override async Task OnInitializedAsync()
     {
         if (Id != Guid.Empty)
         {
-            var query = new GetByIdWarehouseQuery { Id = Id };
-            warehouse = await _mediator.Send(query);
+            var query = new GetByIdQuery { Id = Id };
+            group = await _mediator.Send(query);
         }
     }
     private async Task Save()
@@ -60,15 +56,14 @@
 
         try
         {
-            if(Id != Guid.Empty)
+            if (Id != Guid.Empty)
             {
-                var updateCommand = new UpdateWarehouseCommand
+                var updateCommand = new UpdateGroupCommand
                 {
                     Id = Id,
-                    Name = warehouse.Name,
-                    Address = warehouse.Address,
-                    Phone = warehouse.Phone,
-                    IsActive = warehouse.IsActive
+                    Name = group.name,
+                    Description = group.description,
+                   
                 };
                 await _mediator.Send(updateCommand);
                 Snackbar.Add("Cập nhật kho thành công!", Severity.Success);
@@ -77,18 +72,16 @@
             }
             else
             {
-                var command = new CreateWareHouseCommand
+                var command = new CreateGroupCommands
                 {
-                    Name = warehouse.Name,
-                    Address = warehouse.Address,
-                    Phone = warehouse.Phone,
-                    IsActive = warehouse.IsActive
+                    Name = group.name,
+                    Description = group.description,
                 };
                 await _mediator.Send(command);
                 Snackbar.Add("Lưu kho thành công!", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
-           
+
         }
         catch (Exception ex)
         {

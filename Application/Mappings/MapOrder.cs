@@ -1,4 +1,4 @@
-using Application.DTOs;
+using Application.DTOs.Order.ViewOrder;
 using Domain.Entities;
 
 namespace Application.Mappings;
