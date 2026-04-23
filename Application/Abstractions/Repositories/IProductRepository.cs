@@ -9,5 +9,7 @@ namespace Application.Abstractions.Repositories
         Task<(List<Product> , int total)> GetPageAsync(int pageNumber, int pageSize,string? keyword, CancellationToken cancellationToken);
         Task<List<Product>> GetActiveAsync(CancellationToken cancellationToken);
         Task<Product?> GetByCodeAsync(string productCode, CancellationToken cancellationToken);
+        Task<Product?> GetWithInventoryAsync(Guid id, CancellationToken cancellationToken);
+        Task<List<Product>> GetAllWithDetailsAsync(CancellationToken cancellationToken);
     }
 }

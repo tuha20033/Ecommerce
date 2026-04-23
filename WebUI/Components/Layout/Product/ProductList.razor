@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/product"
 @using Application.DTOs
 @using Application.Features.Product.Commands.DeleteProductCommandandHandler
 @using Application.Features.Product.Queries.GetAllProducts
@@ -84,6 +84,7 @@
     {
         var query = new GetAllProductsQuery();
         products = await Mediator.Send(query);
+        StateHasChanged();
     }
     protected override async Task OnInitializedAsync()
     {

@@ -1,4 +1,4 @@
-﻿@using Application.DTOs
+@using Application.DTOs
 @using Application.Features.Group.Queries.GetAllGroups
 @using Application.Features.Product.Commands.CreateProductCommandandHandler
 @using Application.Features.Product.Commands.UpdateProduct
@@ -108,14 +108,14 @@
             Snackbar.Add("Vui lòng chọn nhóm", Severity.Warning);
             return;
         }
-    if (product.WarehouseId == Guid.Empty)
-{
-    Snackbar.Add("Vui lòng chọn kho", Severity.Warning);
-    return;
-}
-            if (isValid)
-            {
-
+        if (product.WarehouseId == Guid.Empty)
+        {
+            Snackbar.Add("Vui lòng chọn kho", Severity.Warning);
+            return;
+        }
+        if (isValid)
+        {
+            try {
                 if (Id != Guid.Empty)
                 {
                     var command = new UpdateProductCommand()
@@ -127,8 +127,9 @@
                             Price = product.Price,
                             ImageUrl = product.ImageUrl,
                             WareHouse = product.WareHouse,
+                            WarehouseId = product.WarehouseId,
                             GroupId = product.GroupId,
-                         
+
                         };
                     await _mediator.Send(command);
                 }
@@ -147,8 +148,14 @@
                         };
                     await _mediator.Send(command);
                 }
+                Snackbar.Add("Lưu thành công!", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
        
     }
 

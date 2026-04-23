@@ -18,7 +18,7 @@ namespace Application.Features.Product.Queries.GetAllProducts
 
         public async Task<List<ProductDTO>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
         {
-            var products = await _productRepository.GetAllAsync(cancellationToken);
+            var products = await _productRepository.GetAllWithDetailsAsync(cancellationToken);
             return _mapper.Map<List<ProductDTO>>(products);
         }
     }

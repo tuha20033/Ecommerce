@@ -35,13 +35,15 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken ct)
         {
-            return await Set.ToListAsync(ct);
+            return await Set
+                .AsNoTracking()
+                .ToListAsync(ct);
         }
 
         public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            var item = await Set.FindAsync(new object[] {id},ct) ;
-            return item;
+            return await Set
+                .FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id, ct);
         }
 
         public async Task UpdateAsync(T entity, CancellationToken ct)

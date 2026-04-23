@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace Application.Features.Product.Commands.UpdateProduct
 {
@@ -11,7 +11,7 @@ namespace Application.Features.Product.Commands.UpdateProduct
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
-
+        public Guid WarehouseId { get; set; }
         public int WareHouse { get; set; }
         public Guid GroupId { get; set; }
 

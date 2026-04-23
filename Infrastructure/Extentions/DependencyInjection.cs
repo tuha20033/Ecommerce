@@ -25,8 +25,8 @@ namespace Infrastructure.Extentions
             //    options.UseSqlServer(dbConn);
             //});
 
-            services.AddDbContextFactory<ApplicationDbContext>(options =>
-                options.UseSqlServer(dbConn), ServiceLifetime.Scoped);
+            services.AddDbContext<ApplicationDbContext>(options =>
+     options.UseSqlServer(dbConn), ServiceLifetime.Scoped);
             services.AddMemoryCache();
 
 

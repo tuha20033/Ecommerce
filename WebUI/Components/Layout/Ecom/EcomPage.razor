@@ -1,0 +1,115 @@
+﻿@page "/"
+@using Application.DTOs
+@using Application.Features.Product.Queries.GetAllProducts
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudGrid>
+        @foreach (var item in products)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudCard Style="max-height:230px;max-with:120px">
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+                            <MudAvatar Color="Color.Secondary">I</MudAvatar>
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.body1">@item.Name</MudText>
+                            <MudText Typo="Typo.body2">Còn:@item.WareHouse</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudFabMenu StartIcon="@Icons.Material.Outlined.Settings" Color="Color.Primary" Direction="@_direction" Size="Size.Small">
+                                <MudFabMenuItem EndIcon="@Icons.Material.Outlined.LooksOne" Color="Color.Primary" Size="Size.Small" />
+                                <MudFabMenuItem EndIcon="@Icons.Material.Outlined.LooksTwo" Color="Color.Primary" Size="Size.Small" />
+                                <MudFabMenuItem EndIcon="@Icons.Material.Outlined.Looks3" Color="Color.Primary" Size="Size.Small" />
+                            </MudFabMenu>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardMedia Image="@item.ImageUrl" Height="200" />
+                    <MudCardContent>
+                        <MudText>@item.Description</MudText>
+                        <MudText >@item.Price</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" />
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private Direction _direction = Direction.Right;
+    private List<ProductDTO> products = new();
+    private ProductDTO? selectedItem;
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+
+    private string searchString = "";
+    private async Task LoadData()
+    {
+        var query = new GetAllProductsQuery();
+        products = await Mediator.Send(query);
+        StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private bool FilterFunc(ProductDTO product)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        return product.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || product.ProductCode.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || product.GroupName.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    
+    // private async Task OpenDialog(Guid id)
+    // {
+    //     var parameters = new DialogParameters { ["Id"] = id };
+    //     var options = new DialogOptions
+    //     {
+    //         MaxWidth = MaxWidth.Medium,
+    //         FullWidth = true,
+    //         CloseOnEscapeKey = true
+    //     };
+    //     var dialog = await DialogService.ShowAsync<ProductEdit>("Product", parameters, options);
+    //     var result = await dialog.Result;
+    //     if (!result.Canceled)
+    //     {
+    //         await LoadData();
+    //     }
+    // }
+    // private async Task Delete(Guid id)
+    // {
+    //     var confirm = await JS.InvokeAsync<bool>("confirm", "Bạn có chắc muốn xóa không?");
+
+    //     if (confirm)
+    //     {
+    //         var command = new DeleteProductCommand { Id = id };
+    //         await Mediator.Send(command);
+
+    //         await LoadData();
+    //     }
+    // }
+
+    // private async Task OpenCreateGroupDialog()
+    // {
+    //     var dialog = await DialogService.ShowAsync<CreateGroupDialog>("Tạo nhóm");
+    //     var result = await dialog.Result;
+
+    //     if (!result.Canceled)
+    //     {
+    //         Snackbar.Add("Tạo nhóm thành công", Severity.Success);
+    //         await LoadData();
+    //     }
+    // }
+}

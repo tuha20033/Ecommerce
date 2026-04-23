@@ -21,10 +21,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Adress\Commands\DeleteAdressCommandandHandler\" />
-    <Folder Include="Features\Adress\Commands\UpdateAdressCommandandHandler\" />
-    <Folder Include="Features\Shipment\" />
-    <Folder Include="Features\Payment\" />
+    <Folder Include="Features\CartItem\Queries\GetAllCartItem\" />
+    <Folder Include="Features\CartItem\Queries\GetByIdCartItem\" />
+    <Folder Include="Features\Cart\Queries\GetCartById\" />
+    <Folder Include="Features\CouponUsage\Commands\UpdateCouponUsageCommandHandler\" />
+    <Folder Include="Features\CouponUsage\Queries\" />
+    <Folder Include="Features\InventoryItem\Commands\" />
+    <Folder Include="Features\InventoryItem\Queries\" />
+    <Folder Include="Features\Notification\Commands\" />
+    <Folder Include="Features\Notification\Queries\" />
+    <Folder Include="Features\OrderItem\Commands\" />
+    <Folder Include="Features\OrderItem\Queries\" />
+    <Folder Include="Features\Payment\Commands\" />
+    <Folder Include="Features\Payment\Queries\" />
+    <Folder Include="Features\Promotion\Commands\" />
+    <Folder Include="Features\Promotion\Queries\" />
+    <Folder Include="Features\ReviewMedia\Commands\" />
+    <Folder Include="Features\ReviewMedia\Queries\" />
+    <Folder Include="Features\Review\Commands\" />
+    <Folder Include="Features\Review\Queries\" />
+    <Folder Include="Features\ShippingCarrier\Commands\" />
+    <Folder Include="Features\ShippingCarrier\Queries\" />
+    <Folder Include="Features\Shipment\Commands\CreateShipmentCommandHandler\" />
+    <Folder Include="Features\Shipment\Commands\DeleteShipmentCommandHandler\" />
+    <Folder Include="Features\Shipment\Commands\UpdateShipmentCommandHandler\" />
+    <Folder Include="Features\Shipment\Queries\GetAllCart\" />
+    <Folder Include="Features\Shipment\Queries\GetByIdCart\" />
+    <Folder Include="Features\StockMovement\Commands\" />
+    <Folder Include="Features\StockMovement\Queries\" />
   </ItemGroup>
 
 </Project>

@@ -23,6 +23,15 @@ namespace Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Product>> GetAllWithDetailsAsync(CancellationToken cancellationToken)
+        {
+            return await _context.Products
+        .AsNoTracking()
+        .Include(p => p.InventoryItem)
+        .Include(p => p.Group)
+        .ToListAsync(cancellationToken);
+        }
+
         public async Task<Product?> GetByCodeAsync(string productCode, CancellationToken cancellationToken)
         {
             return await _context.Products
@@ -56,6 +65,15 @@ namespace Infrastructure.Repositories
             .ToListAsync(cancellationToken);
 
             return (Product, total);
+        }
+
+        public Task<Product?> GetWithInventoryAsync(Guid id, CancellationToken cancellationToken)
+        {
+           return _context.Products
+                .Include(p => p.InventoryItem)
+                 .Include(p => p.Group)
+
+                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
     }
 }

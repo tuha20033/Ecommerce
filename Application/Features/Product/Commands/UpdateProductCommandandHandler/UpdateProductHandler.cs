@@ -1,4 +1,4 @@
-﻿
+
 
 using Application.Abstractions.Repositories;
 using Application.Abstractions.UnitOfWork;
@@ -21,7 +21,7 @@ namespace Application.Features.Product.Commands.UpdateProductCommandandHandler
         }
         public async Task<bool> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
-           var product = await _productRepository.GetByIdAsync(request.Id, cancellationToken);
+           var product = await _productRepository.GetWithInventoryAsync(request.Id, cancellationToken);
             if(product == null)
               {
                 throw new Exception("product not found ");
@@ -45,14 +45,16 @@ namespace Application.Features.Product.Commands.UpdateProductCommandandHandler
             {
                 product.InventoryItem = new Domain.Entities.InventoryItem
                 {
-                    Quantity = request.WareHouse
+                    Quantity = request.WareHouse,
+                    WarehouseId = request.WarehouseId
                 };
             }
             else 
             {
                 product.InventoryItem.Quantity = request.WareHouse;
+                product.InventoryItem.WarehouseId = request.WarehouseId;
             }
-            await _productRepository.UpdateAsync(product, cancellationToken);
+            //await _productRepository.UpdateAsync(product, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return true;
         }
