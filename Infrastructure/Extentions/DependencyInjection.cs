@@ -57,6 +57,7 @@ namespace Infrastructure.Extentions
             services.AddScoped<IShipmentRepository, ShipmentRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IShippingCarrierRepository, ShippingCarrierRepository>();
+            services.AddScoped<ICouponUsageRepository, CouponUsageRepository>();
 
             return services;
         }

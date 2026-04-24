@@ -1,6 +1,7 @@
 
 using Application.DTOs;
 using Application.Features.Product.Commands.CreateProductCommandandHandler;
+using Application.Features.Product.Commands.UpdateProduct;
 using Domain.Entities;
 
 namespace Application.Mappings;
@@ -22,5 +23,6 @@ public class MapProduct : AutoMapper.Profile
                  opt => opt.MapFrom(src => src.Group != null ? src.Group.Name : ""));
 
         CreateMap<CreateProductCommands, Product>();
+        CreateMap<UpdateProductCommand, Product>();
     }
 }

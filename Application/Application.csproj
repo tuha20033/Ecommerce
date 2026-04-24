@@ -24,7 +24,6 @@
     <Folder Include="Features\CartItem\Queries\GetAllCartItem\" />
     <Folder Include="Features\CartItem\Queries\GetByIdCartItem\" />
     <Folder Include="Features\Cart\Queries\GetCartById\" />
-    <Folder Include="Features\CouponUsage\Commands\UpdateCouponUsageCommandHandler\" />
     <Folder Include="Features\CouponUsage\Queries\" />
     <Folder Include="Features\InventoryItem\Commands\" />
     <Folder Include="Features\InventoryItem\Queries\" />
@@ -32,8 +31,6 @@
     <Folder Include="Features\Notification\Queries\" />
     <Folder Include="Features\OrderItem\Commands\" />
     <Folder Include="Features\OrderItem\Queries\" />
-    <Folder Include="Features\Payment\Commands\" />
-    <Folder Include="Features\Payment\Queries\" />
     <Folder Include="Features\Promotion\Commands\" />
     <Folder Include="Features\Promotion\Queries\" />
     <Folder Include="Features\ReviewMedia\Commands\" />
