@@ -1,0 +1,98 @@
+@namespace WebUI.Components.Layout.Notification
+@using Application.DTOs
+@using Application.Features.Notification.Commands.CreateNotification
+@using Application.Services
+@using Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IKeycloakUserService KeycloakUserService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Notifications" Class="mr-2" />
+            Gửi thông báo mới
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+
+          
+            <MudAutocomplete T="KeyCloakUserDTO"
+                             Label="Tìm khách hàng"
+                             @bind-Value="selectedUser"
+                             SearchFunc="SearchUsers"
+                             ToStringFunc="@(u => u is null ? "" : $"{u.FirstName} {u.LastName} ({u.Email})")"
+                             Required="true"
+                             Clearable="true" />
+
+            <MudTextField Label="Tiêu đề" @bind-Value="notification.Title"
+                          Required="true" Class="mt-2" />
+            <MudTextField Label="Nội dung" @bind-Value="notification.content"
+                          Lines="3" Required="true" Class="mt-2" />
+            <MudSelect T="NotificationType" Label="Loại thông báo"
+                       @bind-Value="notification.Type" Class="mt-2">
+                @foreach (var type in Enum.GetValues<NotificationType>())
+                {
+                    <MudSelectItem Value="@type">@type.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField Label="Dữ liệu bổ sung (JSON)"
+                          @bind-Value="notification.data" Class="mt-2" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Gửi</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm form = default!;
+    private bool isValid;
+    private KeyCloakUserDTO? selectedUser;
+    private NotificationDTO notification = new() { Type = NotificationType.Promotion };
+
+    // Gọi Keycloak tìm kiếm theo keyword
+    private async Task<IEnumerable<KeyCloakUserDTO>> SearchUsers(string keyword, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(keyword)) return Enumerable.Empty<KeyCloakUserDTO>();
+        return await KeycloakUserService.SearchShare(keyword, max: 10, cancellationToken: ct);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        await form.Validate();
+        if (!isValid) return;
+
+        if (selectedUser is null)
+        {
+            Snackbar.Add("Vui lòng chọn khách hàng", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var command = new CreateNotificationCommand
+            {
+                Title = notification.Title,
+                content = notification.content,
+                Type = notification.Type,
+                data = notification.data,
+                CustomerId = Guid.Parse(selectedUser.Id)  // ← lấy từ Keycloak
+            };
+            await Mediator.Send(command);
+            Snackbar.Add("Gửi thông báo thành công", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

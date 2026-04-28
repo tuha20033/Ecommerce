@@ -12,13 +12,13 @@ namespace Infrastructure.Repositories
         public GenericRepository(ApplicationDbContext context)
         {
             _context = context;
-            Set = _context.Set<T>();
+            //Set = _context.Set<T>();
         }
 
         public async Task AddAsync(T entity, CancellationToken ct)
         {
-           await Set.AddAsync(entity,ct);
-           //await _context.SaveChangesAsync(ct);
+           await _context.Set<T>().AddAsync(entity,ct);
+            ////await _context.SaveChangesAsync(ct);
 
         }
 
@@ -27,7 +27,7 @@ namespace Infrastructure.Repositories
             var existing = await  GetByIdAsync(id, ct);
             if (existing is not null)
             {
-                Set.Remove(existing);
+                _context.Set<T>().Remove(existing);
                 //await _context.SaveChangesAsync(ct);
             }
 
@@ -35,20 +35,20 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken ct)
         {
-            return await Set
+            return await _context.Set<T>()
                 .AsNoTracking()
                 .ToListAsync(ct);
         }
 
         public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            return await Set
+            return await _context.Set<T>()
                 .FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id, ct);
         }
 
         public async Task UpdateAsync(T entity, CancellationToken ct)
         {
-            Set.Update(entity);
+            _context.Set<T>().Update(entity);
             //await _context.SaveChangesAsync(ct);
 
         }

@@ -1,64 +1,39 @@
-﻿@page "/warehouse"
+@page "/warehouse"
 @using Application.DTOs
+@using Application.Features.Warehouse.Commands.DeleteWarehouse
 @using Application.Features.Warehouse.Queries.GetAllWarehouse
 @using MediatR
 @inject IMediator Mediator
-@inject IDialogService DialogService
+@inject IDialogService _dialogService
 @inject ISnackbar Snackbar
 
-
-<MudTable Items="@warehouses" Dense="@dense" Hover="true" Bordered="false"
-          Striped="true" Filter="FilterFunc">
+<MudTable Items="@warehouses" Dense="true" Hover="true" Bordered="true" Striped="true">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Danh sách kho</MudText>
+        <MudText Typo="Typo.h6">Danh sách kho hàng</MudText>
         <MudSpacer />
-        <MudButton Color="Color.Primary"
-                   Variant="Variant.Filled"
-                   OnClick="@(() => OpenDialog(Guid.Empty))">
-            Thêm kho
-        </MudButton>
-        <MudTextField @bind-Value="searchString"
-                      Placeholder="Tìm kiếm..."
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Class="mt-0 ml-2" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenDialog(Guid.Empty))">Thêm kho hàng</MudButton>
     </ToolBarContent>
-
     <HeaderContent>
         <MudTh>Tên kho</MudTh>
         <MudTh>Địa chỉ</MudTh>
         <MudTh>Số điện thoại</MudTh>
         <MudTh>Trạng thái</MudTh>
-        <MudTh>Action</MudTh>
+        <MudTh>Thao tác</MudTh>
     </HeaderContent>
-
     <RowTemplate>
-        <MudTd>@context.Name</MudTd>
-        <MudTd>@context.Address</MudTd>
-        <MudTd>@context.Phone</MudTd>
-        <MudTd>
-            @if (context.IsActive)
-            {
-                <MudChip T="string" Color="Color.Success" Size="Size.Small">Hoạt động</MudChip>
-            }
-            else
-            {
-                <MudChip T="string" Color="Color.Error" Size="Size.Small">Ngừng</MudChip>
-            }
+        <MudTd DataLabel="Tên kho">@context.Name</MudTd>
+        <MudTd DataLabel="Địa chỉ">@context.Address</MudTd>
+        <MudTd DataLabel="Số điện thoại">@context.Phone</MudTd>
+        <MudTd DataLabel="Trạng thái">
+            <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small">
+                @(context.IsActive ? "Hoạt động" : "Ngừng")
+            </MudChip>
         </MudTd>
         <MudTd>
-            <MudButton Color="Color.Primary"
-                       OnClick="@(() => OpenDialog(context.Id))">
-                Edit
-            </MudButton>
-            <MudButton Color="Color.Error"
-                       OnClick="@(() => Delete(context.Id))"
-                       Class="ml-2">
-                Delete
-            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDialog(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWarehouse(context.Id))" />
         </MudTd>
     </RowTemplate>
-
     <PagerContent>
         <MudTablePager />
     </PagerContent>
@@ -66,8 +41,6 @@
 
 @code {
     private List<WarehouseDTO> warehouses = new();
-    private string searchString = "";
-    private bool dense = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,24 +52,11 @@
         warehouses = await Mediator.Send(new GetAllWarehouseQuery());
     }
 
-    private bool FilterFunc(WarehouseDTO w)
-    {
-        if (string.IsNullOrWhiteSpace(searchString)) return true;
-        return w.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-            || (w.Address?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false)
-            || (w.Phone?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false);
-    }
-
     private async Task OpenDialog(Guid id)
     {
         var parameters = new DialogParameters { ["Id"] = id };
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true,
-            CloseOnEscapeKey = true
-        };
-        var dialog = await DialogService.ShowAsync<WarehouseEdit>("Kho hàng", parameters, options);
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await _dialogService.ShowAsync<WarehouseEdit>("Kho hàng", parameters, options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -104,9 +64,13 @@
         }
     }
 
-    private async Task Delete(Guid id)
+    private async Task DeleteWarehouse(Guid id)
     {
-        // Thêm DeleteWarehouseCommand sau
-        Snackbar.Add("Chức năng đang phát triển", Severity.Info);
+        var result = await Mediator.Send(new DeleteWarehouseCommand { Id = id });
+        if (result)
+        {
+            Snackbar.Add("Xóa kho hàng thành công", Severity.Success);
+            await LoadData();
+        }
     }
 }

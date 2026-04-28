@@ -1,8 +1,9 @@
+using Application.Abstractions.Caching;
 using MediatR;
 
 namespace Application.Features.Product.Commands.UpdateProduct
 {
-    public class UpdateProductCommand : IRequest<bool>
+    public class UpdateProductCommand : IRequest<bool>, ICacheInvalidator
     {
         public Guid Id { get; set; }
 
@@ -15,5 +16,7 @@ namespace Application.Features.Product.Commands.UpdateProduct
         public int WareHouse { get; set; }
         public Guid GroupId { get; set; }
 
+        // Xóa cache danh sách + chi tiết sản phẩm khi cập nhật
+        public string[] CacheKeysToInvalidate => ["products-all", $"product-{Id}"];
     }
 }

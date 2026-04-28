@@ -1,0 +1,76 @@
+@page "/review"
+@using Application.DTOs
+@using Application.Features.Review.Queries.GetAllReviews
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudTable Items="@reviews" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Danh sách đánh giá</MudText>
+        <MudSpacer />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Sản phẩm</MudTh>
+        <MudTh>Khách hàng</MudTh>
+        <MudTh>Rating</MudTh>
+        <MudTh>Tiêu đề</MudTh>
+        <MudTh>Nội dung</MudTh>
+        <MudTh>Trạng thái</MudTh>
+        <MudTh>Thao tác</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Sản phẩm">@context.ProductId</MudTd>
+        <MudTd DataLabel="Khách hàng">@context.CustomerId</MudTd>
+        <MudTd DataLabel="Rating">
+            <MudRating SelectedValue="@context.Rating" ReadOnly="true" />
+        </MudTd>
+        <MudTd DataLabel="Tiêu đề">@context.Title</MudTd>
+        <MudTd DataLabel="Nội dung">@context.Content</MudTd>
+        <MudTd DataLabel="Trạng thái">
+            <MudChip T="string" Color="@(context.IsApproved ? Color.Success : Color.Warning)" Size="Size.Small">
+                @(context.IsApproved ? "Đã duyệt" : "Chờ duyệt")
+            </MudChip>
+        </MudTd>
+        <MudTd>
+            @if (!context.IsApproved)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" OnClick="@(() => ApproveReview(context.Id))">Duyệt</MudButton>
+            }
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteReview(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<ReviewDTO> reviews = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        reviews = await Mediator.Send(new GetAllReviewsQuery());
+    }
+
+    private async Task ApproveReview(Guid id)
+    {
+        var result = await Mediator.Send(new Application.Features.Review.Commands.ApproveReview.ApproveReviewCommand { Id = id });
+        if (result)
+        {
+            Snackbar.Add("Duyệt đánh giá thành công", Severity.Success);
+            await LoadData();
+        }
+    }
+
+    private void DeleteReview(Guid id)
+    {
+        // TODO: Implement Delete
+        Snackbar.Add($"Xóa đánh giá: {id}", Severity.Info);
+    }
+}

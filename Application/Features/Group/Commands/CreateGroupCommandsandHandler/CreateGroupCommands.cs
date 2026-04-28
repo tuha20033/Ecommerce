@@ -1,12 +1,15 @@
-﻿
+
+using Application.Abstractions.Caching;
 using MediatR;
 
 namespace Application.Features.Group.Commands.CreateGroupCommandsandHandler
 {
-    public class CreateGroupCommands : IRequest<Guid>
+    public class CreateGroupCommands : IRequest<Guid>, ICacheInvalidator
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public Guid? ParentId { get; set; }
+
+        public string[] CacheKeysToInvalidate => ["groups-all"];
     }
 }

@@ -1,5 +1,114 @@
-﻿<h3>AdressEdit</h3>
+@using Application.DTOs
+@using Application.Features.Adress.Commands.CreateAdressCommandandHandler
+@using Application.Features.Adress.Commands.UpdateAdressCommandandHandler
+@using Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Class="mr-2" />
+            @((Id == Guid.Empty) ? "Thêm địa chỉ" : "Sửa địa chỉ")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+            <MudTextField Label="Người nhận" @bind-Value="adress.RecipientName" Required="true" />
+            <MudTextField Label="Số điện thoại" @bind-Value="adress.Phone" Required="true" Class="mt-2" />
+            <MudTextField Label="Đường/Số nhà" @bind-Value="adress.Street" Required="true" Class="mt-2" />
+            <MudGrid Class="mt-2">
+                <MudItem xs="4">
+                    <MudTextField Label="Phường/Xã" @bind-Value="adress.Ward" Required="true" />
+                </MudItem>
+                <MudItem xs="4">
+                    <MudTextField Label="Quận/Huyện" @bind-Value="adress.District" Required="true" />
+                </MudItem>
+                <MudItem xs="4">
+                    <MudTextField Label="Tỉnh/Thành" @bind-Value="adress.Province" Required="true" />
+                </MudItem>
+            </MudGrid>
+            <MudSelect T="AddressType" Label="Loại địa chỉ" @bind-Value="adress.Type" Class="mt-2">
+                @foreach (var type in Enum.GetValues<AddressType>())
+                {
+                    <MudSelectItem Value="@type">@type.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudCheckBox @bind-Value="adress.IsDefault" Label="Địa chỉ mặc định" Color="Color.Primary" Class="mt-2" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Guid Id { get; set; }
 
+    private MudForm form;
+    private bool isValid;
+    private AdressDTO adress = new() { Type = AddressType.Home };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != Guid.Empty)
+        {
+            // TODO: Implement GetAdressByIdQuery if needed, for now just use data from list
+            // Or better yet, just implement the query
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        await form.Validate();
+        if (!isValid) return;
+
+        try
+        {
+            if (Id == Guid.Empty)
+            {
+                var command = new CreateAdressCommand
+                {
+                    RecipientName = adress.RecipientName,
+                    Phone = adress.Phone,
+                    Street = adress.Street,
+                    Ward = adress.Ward,
+                    District = adress.District,
+                    Province = adress.Province,
+                    Type = adress.Type,
+                    IsDefault = adress.IsDefault,
+                    CustomerId = Guid.Empty // Link to current customer
+                };
+                await Mediator.Send(command);
+                Snackbar.Add("Thêm địa chỉ thành công", Severity.Success);
+            }
+            else
+            {
+                var command = new UpdateAdressCommand
+                {
+                    Id = Id,
+                    RecipientName = adress.RecipientName,
+                    Phone = adress.Phone,
+                    Street = adress.Street,
+                    Ward = adress.Ward,
+                    District = adress.District,
+                    Province = adress.Province,
+                    Type = adress.Type,
+                    IsDefault = adress.IsDefault
+                };
+                await Mediator.Send(command);
+                Snackbar.Add("Cập nhật địa chỉ thành công", Severity.Success);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
 }

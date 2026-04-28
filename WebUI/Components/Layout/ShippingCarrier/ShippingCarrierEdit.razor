@@ -1,0 +1,22 @@
+@namespace WebUI.Components.Layout.ShippingCarrier
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Class="mr-2" />
+            @((Id == Guid.Empty) ? "Thêm đơn vị vận chuyển" : "Sửa đơn vị vận chuyển")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+            <MudTextField Label="Tên đơn vị" @bind-Value="carrier.Name" Required="true" />
+            <MudTextField Label="Mã vận chuyển" @bind-Value="carrier.Code" Required="true" Class="mt-2" />
+            <MudTextField Label="Logo URL" @bind-Value="carrier.LogoUrl" Class="mt-2" />
+            <MudCheckBox @bind-Value="carrier.IsActive" Label="Hoạt động" Color="Color.Primary" Class="mt-2" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>

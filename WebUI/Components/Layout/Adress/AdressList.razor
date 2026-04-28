@@ -1,5 +1,68 @@
-﻿<h3>AdressList</h3>
+@page "/address"
+@using Application.DTOs
+@using Application.Features.Adress.Queries.GetAllAdress
+@using MediatR
+@inject IMediator Mediator
+@inject IDialogService _dialogService
+@inject ISnackbar Snackbar
+
+<MudTable Items="@adresses" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Danh sách địa chỉ</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenDialog(Guid.Empty))">Thêm địa chỉ</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Người nhận</MudTh>
+        <MudTh>Số điện thoại</MudTh>
+        <MudTh>Địa chỉ</MudTh>
+        <MudTh>Loại</MudTh>
+        <MudTh>Mặc định</MudTh>
+        <MudTh>Thao tác</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Người nhận">@context.RecipientName</MudTd>
+        <MudTd DataLabel="Số điện thoại">@context.Phone</MudTd>
+        <MudTd DataLabel="Địa chỉ">@context.FullAddress</MudTd>
+        <MudTd DataLabel="Loại">@context.Type</MudTd>
+        <MudTd DataLabel="Mặc định">
+            @if (context.IsDefault)
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small">Mặc định</MudChip>
+            }
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDialog(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
 
 @code {
+    private List<AdressDTO> adresses = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        adresses = await Mediator.Send(new GetAllAdressQuery());
+    }
+
+    private async Task OpenDialog(Guid id)
+    {
+        var parameters = new DialogParameters { ["Id"] = id };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await _dialogService.ShowAsync<AdressEdit>(id == Guid.Empty ? "Thêm địa chỉ" : "Sửa địa chỉ", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
 }

@@ -1,0 +1,78 @@
+@page "/notification"
+@using Application.DTOs
+@using Application.Features.Notification.Queries.GetAllNotifications
+@using MediatR
+@using WebUI.Components.Layout.Notification
+@inject IMediator Mediator
+@inject IDialogService dialogServiceInstance
+@inject ISnackbar Snackbar
+
+<MudTable Items="@notifications" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Thông báo hệ thống</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenSendDialog">Gửi thông báo</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Tiêu đề</MudTh>
+        <MudTh>Nội dung</MudTh>
+        <MudTh>Ngày</MudTh>
+        <MudTh>Trạng thái</MudTh>
+        <MudTh>Thao tác</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Tiêu đề">@context.Title</MudTd>
+        <MudTd DataLabel="Nội dung">@context.content</MudTd>
+        <MudTd DataLabel="Ngày">@context.CreatedAt.ToString("dd/MM/yyyy HH:mm")</MudTd>
+        <MudTd DataLabel="Trạng thái">
+            <MudChip T="string" Color="@(context.IsRead ? Color.Default : Color.Info)" Size="Size.Small">
+                @(context.IsRead ? "Đã đọc" : "Mới")
+            </MudChip>
+        </MudTd>
+        <MudTd>
+            @if (!context.IsRead)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.MarkEmailRead" Color="Color.Primary" Size="Size.Small" OnClick="@(() => MarkAsRead(context.Id))" />
+            }
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Delete(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<NotificationDTO> notifications = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        notifications = await Mediator.Send(new GetAllNotificationsQuery());
+    }
+
+    private async Task OpenSendDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await dialogServiceInstance.ShowAsync<NotificationEdit>("Gửi thông báo", options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private void MarkAsRead(Guid id)
+    {
+        Snackbar.Add($"Đã đánh dấu đã đọc: {id}", Severity.Success);
+    }
+
+    private void Delete(Guid id)
+    {
+        Snackbar.Add($"Đã xóa thông báo: {id}", Severity.Info);
+    }
+}

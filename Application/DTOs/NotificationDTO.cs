@@ -12,4 +12,7 @@ public class NotificationDTO
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
     public string? data { get; set; }
+    public string Message { get; set; } = string.Empty; 
+    public DateTime CreatedAt { get; set; }
+ 
 }

@@ -54,7 +54,7 @@ namespace Application.Features.Product.Commands.UpdateProductCommandandHandler
                 product.InventoryItem.Quantity = request.WareHouse;
                 product.InventoryItem.WarehouseId = request.WarehouseId;
             }
-            //await _productRepository.UpdateAsync(product, cancellationToken);
+            await _productRepository.UpdateAsync(product, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return true;
         }

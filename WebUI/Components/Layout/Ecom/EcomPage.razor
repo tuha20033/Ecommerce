@@ -1,37 +1,59 @@
-﻿@page "/"
+@page "/"
 @using Application.DTOs
+@using Application.Features.Cart.Commands.CreatCartCommamdHandler
 @using Application.Features.Product.Queries.GetAllProducts
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudGrid>
         @foreach (var item in products)
         {
+            var _item = item;
             <MudItem xs="12" sm="6" md="4" lg="3">
-                <MudCard Style="max-height:230px;max-with:120px">
+                <MudCard Style="max-height:230px; max-with:120px">
                     <MudCardHeader>
                         <CardHeaderAvatar>
                             <MudAvatar Color="Color.Secondary">I</MudAvatar>
                         </CardHeaderAvatar>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.body1">@item.Name</MudText>
-                            <MudText Typo="Typo.body2">Còn:@item.WareHouse</MudText>
+                            <MudText Typo="Typo.body1">@_item.Name</MudText>
+                            <MudText Typo="Typo.body2">Còn: @_item.WareHouse</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
-                            <MudFabMenu StartIcon="@Icons.Material.Outlined.Settings" Color="Color.Primary" Direction="@_direction" Size="Size.Small">
+                            <MudFabMenu StartIcon="@Icons.Material.Outlined.Settings"
+                                        Color="Color.Primary"
+                                        Direction="@_direction"
+                                        Size="Size.Small">
                                 <MudFabMenuItem EndIcon="@Icons.Material.Outlined.LooksOne" Color="Color.Primary" Size="Size.Small" />
                                 <MudFabMenuItem EndIcon="@Icons.Material.Outlined.LooksTwo" Color="Color.Primary" Size="Size.Small" />
                                 <MudFabMenuItem EndIcon="@Icons.Material.Outlined.Looks3" Color="Color.Primary" Size="Size.Small" />
                             </MudFabMenu>
                         </CardHeaderActions>
                     </MudCardHeader>
-                    <MudCardMedia Image="@item.ImageUrl" Height="200" />
+                    <MudCardMedia Image="@_item.ImageUrl" Height="200" />
                     <MudCardContent>
-                        <MudText>@item.Description</MudText>
-                        <MudText >@item.Price</MudText>
+                        <MudText>@_item.Description</MudText>
+                        <MudText>@_item.Price.ToString("N0") đ</MudText>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" />
+                        <MudIconButton Icon="@Icons.Material.Filled.AddShoppingCart"
+                                       Color="Color.Primary"
+                                       Title="Thêm vào giỏ hàng"
+                                       OnClick="@(() => AddToCart(_item))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ShoppingCartCheckout"
+                                       Color="Color.Success"
+                                       Title="Đặt hàng"
+                                       OnClick="@(() => PlaceOrder(_item))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.RateReview"
+                                       Color="Color.Warning"
+                                       Title="Đánh giá"
+                                       OnClick="@(() => WriteReview(_item))" />
                     </MudCardActions>
                 </MudCard>
             </MudItem>
@@ -42,74 +64,53 @@
 @code {
     private Direction _direction = Direction.Right;
     private List<ProductDTO> products = new();
-    private ProductDTO? selectedItem;
+    private Guid currentUserId;
 
-    private bool dense = false;
-    private bool hover = true;
-    private bool striped = false;
-    private bool bordered = false;
-
-    private string searchString = "";
-    private async Task LoadData()
-    {
-        var query = new GetAllProductsQuery();
-        products = await Mediator.Send(query);
-        StateHasChanged();
-    }
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var idClaim = authState.User.FindFirst("sub");
+        if (idClaim is not null)
+            Guid.TryParse(idClaim.Value, out currentUserId);
+
         await LoadData();
     }
 
-    private bool FilterFunc(ProductDTO product)
+    private async Task LoadData()
     {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-
-        return product.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-            || product.ProductCode.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-            || product.GroupName.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+        products = await Mediator.Send(new GetAllProductsQuery());
+        StateHasChanged();
     }
 
-    
-    // private async Task OpenDialog(Guid id)
-    // {
-    //     var parameters = new DialogParameters { ["Id"] = id };
-    //     var options = new DialogOptions
-    //     {
-    //         MaxWidth = MaxWidth.Medium,
-    //         FullWidth = true,
-    //         CloseOnEscapeKey = true
-    //     };
-    //     var dialog = await DialogService.ShowAsync<ProductEdit>("Product", parameters, options);
-    //     var result = await dialog.Result;
-    //     if (!result.Canceled)
-    //     {
-    //         await LoadData();
-    //     }
-    // }
-    // private async Task Delete(Guid id)
-    // {
-    //     var confirm = await JS.InvokeAsync<bool>("confirm", "Bạn có chắc muốn xóa không?");
+    private async Task AddToCart(ProductDTO item)
+    {
+        var customer = await Mediator.Send(new GetCustomerByUserIdQuery(currentUserId)
+  );
 
-    //     if (confirm)
-    //     {
-    //         var command = new DeleteProductCommand { Id = id };
-    //         await Mediator.Send(command);
+        if (customer == null)
+        {
+            Snackbar.Add("Tài khoản này chưa có Customer", Severity.Error);
+            return;
+        }
 
-    //         await LoadData();
-    //     }
-    // }
+        var command = new CreateCartCommand
+        {
+            CustomerId = currentUserId,
+            ProductId = item.Id,
+            UnitPrice = item.Price,
+            Quantity = 1
+        };
+        await Mediator.Send(command);
+        Snackbar.Add($"Đã thêm \"{item.Name}\" vào giỏ hàng", Severity.Success);
+    }
 
-    // private async Task OpenCreateGroupDialog()
-    // {
-    //     var dialog = await DialogService.ShowAsync<CreateGroupDialog>("Tạo nhóm");
-    //     var result = await dialog.Result;
+    private void PlaceOrder(ProductDTO item)
+    {
+        Navigation.NavigateTo("/cart");
+    }
 
-    //     if (!result.Canceled)
-    //     {
-    //         Snackbar.Add("Tạo nhóm thành công", Severity.Success);
-    //         await LoadData();
-    //     }
-    // }
+    private async Task WriteReview(ProductDTO item)
+    {
+        Snackbar.Add($"Chức năng đánh giá \"{item.Name}\" đang phát triển", Severity.Info);
+    }
 }

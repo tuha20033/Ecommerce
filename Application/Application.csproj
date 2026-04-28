@@ -18,6 +18,7 @@
     <PackageReference Include="AutoMapper" Version="15.1.3" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +47,8 @@
     <Folder Include="Features\Shipment\Queries\GetByIdCart\" />
     <Folder Include="Features\StockMovement\Commands\" />
     <Folder Include="Features\StockMovement\Queries\" />
+    <Folder Include="Features\Workspace\Commands\" />
+    <Folder Include="Features\Workspace\Queries\" />
   </ItemGroup>
 
 </Project>

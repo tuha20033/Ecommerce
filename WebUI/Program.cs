@@ -1,7 +1,9 @@
-using Application;
+﻿using Application;
 using Application.Abstractions.Repositories;
+using Application.Services;
 using Infrastructure.Extentions;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using MudBlazor.Services;
 using WebUI.Components;
 
@@ -14,6 +16,13 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddWebPortalInfrastructure(builder.Configuration);
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddHttpClient("keycloak", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Keycloak:Authority"]!);
+});
+
+// Đăng ký Service
+builder.Services.AddScoped<IKeycloakUserService, KeyCloakUserService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

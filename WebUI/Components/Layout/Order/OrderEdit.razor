@@ -1,0 +1,88 @@
+@using Application.DTOs.Order.ViewOrder
+@using Application.Features.Order.Commands.UpdateOrderStatus
+@using Application.Features.Order.Queries.GetOrderById
+@using Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-2" />
+            Chi tiết đơn hàng: @order.OrderCode
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2">Khách hàng:</MudText>
+                <MudText Typo="Typo.body1">@order.CustomerName</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.subtitle2">Ngày đặt:</MudText>
+                <MudText Typo="Typo.body1">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudSelect T="OrderStatus" Label="Trạng thái đơn hàng" @bind-Value="selectedStatus" Class="mt-2">
+                    @foreach (var status in Enum.GetValues<OrderStatus>())
+                    {
+                        <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6" Class="mt-4">Tổng cộng: @order.TotalAmount.ToString("N0") đ</MudText>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Cập nhật trạng thái</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Guid Id { get; set; }
+
+    private OrderDTO order = new();
+    private OrderStatus selectedStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Mediator.Send(new GetOrderByIdQuery { Id = Id });
+        if (result != null)
+        {
+            order = result;
+            if (Enum.TryParse<OrderStatus>(order.Status, out var status))
+            {
+                selectedStatus = status;
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        try
+        {
+            var result = await Mediator.Send(new UpdateOrderStatusCommand 
+            { 
+                OrderId = Id, 
+                NewStatus = selectedStatus 
+            });
+
+            if (result)
+            {
+                Snackbar.Add("Cập nhật trạng thái thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

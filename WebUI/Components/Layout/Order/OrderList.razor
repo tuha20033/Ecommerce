@@ -1,0 +1,91 @@
+@page "/order"
+@using Application.DTOs.Order.ViewOrder
+@using Application.Features.Order.Queries.GetAllOrders
+@using MediatR
+@inject IMediator Mediator
+@inject IDialogService _dialogService
+@inject ISnackbar Snackbar
+
+<MudTable Items="@orders" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="FilterFunc">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Danh sách đơn hàng</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Mã đơn hàng</MudTh>
+        <MudTh>Khách hàng</MudTh>
+        <MudTh>Tổng tiền</MudTh>
+        <MudTh>Trạng thái</MudTh>
+        <MudTh>Ngày đặt</MudTh>
+        <MudTh>Thao tác</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Mã đơn hàng">@context.OrderCode</MudTd>
+        <MudTd DataLabel="Khách hàng">@context.CustomerName</MudTd>
+        <MudTd DataLabel="Tổng tiền">@context.TotalAmount.ToString("N0") đ</MudTd>
+        <MudTd DataLabel="Trạng thái">
+            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Ngày đặt">@context.OrderDate.ToString("dd/MM/yyyy HH:mm")</MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Small" OnClick="@(() => ViewDetails(context.Id))">Chi tiết</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<OrderDTO> orders = new();
+    private string searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        orders = await Mediator.Send(new GetAllOrdersQuery());
+    }
+
+    private bool FilterFunc(OrderDTO element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.OrderCode.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.CustomerName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Status.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Pending" => Color.Warning,
+            "Confirmed" => Color.Info,
+            "Shipping" => Color.Primary,
+            "Delivered" => Color.Success,
+            "Cancelled" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private async Task ViewDetails(Guid id)
+    {
+        var parameters = new DialogParameters { ["Id"] = id };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await _dialogService.ShowAsync<OrderEdit>("Chi tiết đơn hàng", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+}

@@ -1,4 +1,4 @@
-﻿@page "/product"
+@page "/product"
 @using Application.DTOs
 @using Application.Features.Product.Commands.DeleteProductCommandandHandler
 @using Application.Features.Product.Queries.GetAllProducts
@@ -6,7 +6,7 @@
 @using Microsoft.EntityFrameworkCore.Metadata.Internal
 @using WebUI.Components.Layout.Group
 @inject IMediator Mediator
-@inject IDialogService DialogService
+@inject IDialogService _dialogService
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 <MudTable Items="@products" Dense="@dense" Hover="@hover" Bordered="@bordered"
@@ -109,7 +109,7 @@
             FullWidth = true,          
             CloseOnEscapeKey = true
         };
-        var dialog = await DialogService.ShowAsync<ProductEdit>("Product", parameters,options);
+        var dialog = await _dialogService.ShowAsync<ProductEdit>("Product", parameters,options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -131,7 +131,7 @@
 
     private async Task OpenCreateGroupDialog()
     {
-        var dialog = await DialogService.ShowAsync<CreateGroupDialog>("Tạo nhóm");
+        var dialog = await _dialogService.ShowAsync<CreateGroupDialog>("Tạo nhóm");
         var result = await dialog.Result;
 
         if (!result.Canceled)

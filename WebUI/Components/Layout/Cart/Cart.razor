@@ -1,0 +1,111 @@
+﻿@page "/cart"
+@using Application.DTOs
+@using Application.Features.Cart.Queries.GetAllCart
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudText Typo="Typo.h5" Class="mb-4">🛒 Giỏ hàng</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" />
+    }
+    else if (cart is null || !cart.Items.Any())
+    {
+        <MudAlert Severity="Severity.Info">Giỏ hàng trống!</MudAlert>
+        <div style="display:flex; justify-content:center; margin-top:16px;">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="@(() => Navigation.NavigateTo("/"))">
+                Tiếp tục mua sắm
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@cart.Items" Dense="true" Hover="true" Bordered="true">
+            <HeaderContent>
+                <MudTh>Sản phẩm</MudTh>
+                <MudTh>Đơn giá</MudTh>
+                <MudTh>Số lượng</MudTh>
+                <MudTh>Thành tiền</MudTh>
+                <MudTh>Thao tác</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        @if (!string.IsNullOrEmpty(context.ImageUrl))
+                        {
+                            <MudImage Src="@context.ImageUrl" Width="50" Height="50" ObjectFit="ObjectFit.Cover" />
+                        }
+                        <div>
+                            <MudText Typo="Typo.body1">@context.ProductName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ProductCode</MudText>
+                        </div>
+                    </div>
+                </MudTd>
+                <MudTd>@context.UnitPrice.ToString("N0") đ</MudTd>
+                <MudTd>@context.Quantity</MudTd>
+                <MudTd>@context.Total.ToString("N0") đ</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => RemoveItem(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:16px; gap:16px; align-items:center;">
+            <MudText Typo="Typo.h6">
+                Tổng: <strong>@cart.Items.Sum(x => x.Total).ToString("N0") đ</strong>
+            </MudText>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ShoppingCartCheckout"
+                       OnClick="PlaceOrder">
+                Đặt hàng
+            </MudButton>
+        </div>
+    }
+</MudContainer>
+
+@code {
+    private CartDTO? cart;
+    private Guid currentUserId;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var idClaim = authState.User.FindFirst("sub");
+        if (idClaim is not null)
+            Guid.TryParse(idClaim.Value, out currentUserId);
+
+        await LoadCart();
+    }
+
+    private async Task LoadCart()
+    {
+        isLoading = true;
+        cart = await Mediator.Send(new GetAllCartQuery { CustomerId = currentUserId });
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private void RemoveItem(CartItemDTO item)
+    {
+        // TODO: RemoveCartItemCommand
+        Snackbar.Add($"Đã xóa \"{item.ProductName}\" khỏi giỏ hàng", Severity.Success);
+    }
+
+    private void PlaceOrder()
+    {
+        Navigation.NavigateTo("/order/create");
+    }
+}

@@ -1,0 +1,119 @@
+@using Application.DTOs
+@using Application.Features.Promotion.Commands.CreatePromotion
+@using Application.Features.Promotion.Commands.UpdatePromotion
+@using Application.Features.Promotion.Queries.GetPromotionById
+@using Domain.Enums
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Percent" Class="mr-2" />
+            @((Id == Guid.Empty) ? "Thêm khuyến mãi" : "Sửa khuyến mãi")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="isValid">
+            <MudTextField Label="Tên khuyến mãi" @bind-Value="promotion.Name" Required="true" />
+            <MudTextField Label="Mô tả" @bind-Value="promotion.Description" Lines="2" Class="mt-2" />
+            <MudSelect T="PromotionType" Label="Loại" @bind-Value="promotion.Type" Class="mt-2">
+                @foreach (var type in Enum.GetValues<PromotionType>())
+                {
+                    <MudSelectItem Value="@type">@type.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField Label="Giá trị" @bind-Value="promotion.Value" Required="true" Class="mt-2" />
+            <MudGrid Class="mt-2">
+                <MudItem xs="6">
+                    <MudDatePicker Label="Ngày bắt đầu" @bind-Date="startDate" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker Label="Ngày kết thúc" @bind-Date="endDate" />
+                </MudItem>
+            </MudGrid>
+            <MudCheckBox @bind-Value="promotion.IsActive" Label="Hoạt động" Color="Color.Primary" Class="mt-2" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public Guid Id { get; set; }
+
+    private MudForm form;
+    private bool isValid;
+    private PromotionDTO promotion = new() { StartDate = DateTime.Now, EndDate = DateTime.Now.AddDays(7), IsActive = true };
+    private DateTime? startDate = DateTime.Now;
+    private DateTime? endDate = DateTime.Now.AddDays(7);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != Guid.Empty)
+        {
+            var result = await Mediator.Send(new GetPromotionByIdQuery { Id = Id });
+            if (result != null)
+            {
+                promotion = result;
+                startDate = promotion.StartDate;
+                endDate = promotion.EndDate;
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        await form.Validate();
+        if (!isValid) return;
+
+        promotion.StartDate = startDate ?? DateTime.Now;
+        promotion.EndDate = endDate ?? DateTime.Now;
+
+        try
+        {
+            if (Id == Guid.Empty)
+            {
+                var command = new CreatePromotionCommand
+                {
+                    Name = promotion.Name,
+                    Description = promotion.Description,
+                    Type = promotion.Type,
+                    Value = promotion.Value,
+                    StartDate = promotion.StartDate,
+                    EndDate = promotion.EndDate,
+                    IsActive = promotion.IsActive
+                };
+                await Mediator.Send(command);
+                Snackbar.Add("Thêm khuyến mãi thành công", Severity.Success);
+            }
+            else
+            {
+                var command = new UpdatePromotionCommand
+                {
+                    Id = Id,
+                    Name = promotion.Name,
+                    Description = promotion.Description,
+                    Type = promotion.Type,
+                    Value = promotion.Value,
+                    StartDate = promotion.StartDate,
+                    EndDate = promotion.EndDate,
+                    IsActive = promotion.IsActive
+                };
+                await Mediator.Send(command);
+                Snackbar.Add("Cập nhật khuyến mãi thành công", Severity.Success);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

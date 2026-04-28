@@ -1,94 +1,82 @@
-﻿@* @using Application.DTOs
+@using Application.DTOs
 @using Application.Features.Customer.Commands.CreateCustomer
 @using Application.Features.Customer.Commands.UpdateCustomerCommandandHandler
 @using Application.Features.Customer.Queries.GetCustomerById
-@using Application.Features.Group.Queries.GetAllGroups
-@using Application.Features.Product.Commands.CreateProductCommandandHandler
-@using Application.Features.Product.Commands.UpdateProduct
-@using Application.Features.Product.Commands.UpdateProductCommandandHandler
-@using Application.Features.Product.Queries.GetProductById
-@using Application.Features.Warehouse.Queries.GetAllWarehouse
 @using MediatR
-@using System.Threading.Tasks
+@inject IMediator Mediator
 @inject ISnackbar Snackbar
-@inject IMediator _mediator
-@using MudBlazor
+
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Edit" />
-            @((Id == Guid.Empty) ? "Thêm mới" : "Chỉnh sửa")
+            <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />
+            @((Id == Guid.Empty) ? "Thêm khách hàng" : "Sửa khách hàng")
         </MudText>
     </TitleContent>
-
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="isValid">
-
-            <MudTextField Label="Họ và Tên"
-                          @bind-Value="customer.FullName"
-                          Required="true" />
-
-            <MudTextField Label="Số điện thoại"
-                          @bind-Value="customer.Phone"
-                          Required="true" />
-
-            <MudTextField Label="Email"
-                          @bind-Value="customer.Email" />
-
-            <MudTextField Label="Ảnh Đại diện "
-                          @bind-Value="customer.AvatarUrl"
-                          Required="true" />
-
-            <MudTextField Label="Sinh Nhật "
-                          @bind-Value="customer.DateOfBirth"
-                          Required="true" />
-
-           
-
-
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       OnClick="SaveCustomer"
-                       Class="mt-3">
-                Lưu
-            </MudButton>
-
+            <MudTextField Label="Họ và tên" @bind-Value="customer.FullName" Required="true" />
+            <MudTextField Label="Email" @bind-Value="customer.Email" Required="true" Class="mt-2" />
+            <MudTextField Label="Số điện thoại" @bind-Value="customer.Phone" Class="mt-2" />
+            <MudDatePicker Label="Ngày sinh" @bind-Date="dateOfBirth" Class="mt-2" />
+            <MudTextField Label="Ảnh đại diện (URL)" @bind-Value="customer.AvatarUrl" Class="mt-2" />
         </MudForm>
     </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Lưu</MudButton>
+    </DialogActions>
 </MudDialog>
+
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public Guid Id { get; set; }
 
-    private CustomerDTO customer = new CustomerDTO();
-    // private List<WarehouseDTO> WareHouse = new();
-    // private List<GroupDTO> groups = new();
     private MudForm form;
     private bool isValid;
-    protected override async Task OnInitializedAsync()
-     {
-    //     var warehouseQuery = new GetAllWarehouseQuery();
-    //     WareHouse = await _mediator.Send(warehouseQuery);
+    private CustomerDTO customer = new();
+    private DateTime? dateOfBirth;
 
-    //     var groupquery = new GetAllGroupQuery();
-    //     groups = await _mediator.Send(groupquery);
+    protected override async Task OnInitializedAsync()
+    {
         if (Id != Guid.Empty)
         {
-            var query = new GetCustomerByIdQuery() { Id = Id };
-            customer = await _mediator.Send(query);
-            StateHasChanged();
+            var result = await Mediator.Send(new GetCustomerByIdQuery { Id = Id });
+            if (result != null)
+            {
+                customer = result;
+                dateOfBirth = customer.DateOfBirth;
+            }
         }
     }
-    private async Task SaveCustomer()
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
     {
         await form.Validate();
-      
-        if (isValid)
-        {
+        if (!isValid) return;
 
-            if (Id != Guid.Empty)
+        customer.DateOfBirth = dateOfBirth;
+
+        try
+        {
+            if (Id == Guid.Empty)
             {
-                var command = new UpdateCustomerCommand()
+                var command = new CreateCustomerCommand
+                {
+                    FullName = customer.FullName,
+                    Email = customer.Email,
+                    Phone = customer.Phone,
+                    DateOfBirth = customer.DateOfBirth,
+                    AvatarUrl = customer.AvatarUrl
+                };
+                await Mediator.Send(command);
+                Snackbar.Add("Thêm khách hàng thành công", Severity.Success);
+            }
+            else
+            {
+                var command = new UpdateCustomerCommand
                 {
                     Id = Id,
                     FullName = customer.FullName,
@@ -96,25 +84,15 @@
                     Phone = customer.Phone,
                     DateOfBirth = customer.DateOfBirth,
                     AvatarUrl = customer.AvatarUrl
-
                 };
-                await _mediator.Send(command);
-            }
-            else
-            {
-                var command = new CreateCustomerCommand()
-                {
-                    FullName = customer.FullName,
-                    Email = customer.Email,
-                    Phone = customer.Phone,
-                    DateOfBirth = customer.DateOfBirth,
-                    AvatarUrl = customer.AvatarUrl
-                };
-                await _mediator.Send(command);
+                await Mediator.Send(command);
+                Snackbar.Add("Cập nhật khách hàng thành công", Severity.Success);
             }
             MudDialog.Close(DialogResult.Ok(true));
         }
-
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
     }
-
-} *@
+}

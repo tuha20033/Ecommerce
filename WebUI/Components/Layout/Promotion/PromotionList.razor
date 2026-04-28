@@ -1,0 +1,94 @@
+@page "/promotion"
+@using Application.DTOs
+@using Application.Features.Promotion.Queries.GetAllPromotions
+@using MediatR
+@inject IMediator Mediator
+@inject IDialogService _dialogService
+@inject ISnackbar Snackbar
+
+<MudTable Items="@promotions" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="FilterFunc">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Danh sách khuyến mãi</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePromotion">Thêm khuyến mãi</MudButton>
+        <MudTextField @bind-Value="searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0 ml-4" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Tên</MudTh>
+        <MudTh>Loại</MudTh>
+        <MudTh>Giá trị</MudTh>
+        <MudTh>Ngày bắt đầu</MudTh>
+        <MudTh>Ngày kết thúc</MudTh>
+        <MudTh>Trạng thái</MudTh>
+        <MudTh>Thao tác</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Tên">@context.Name</MudTd>
+        <MudTd DataLabel="Loại">@context.Type</MudTd>
+        <MudTd DataLabel="Giá trị">@context.Value</MudTd>
+        <MudTd DataLabel="Ngày bắt đầu">@context.StartDate.ToString("dd/MM/yyyy")</MudTd>
+        <MudTd DataLabel="Ngày kết thúc">@context.EndDate.ToString("dd/MM/yyyy")</MudTd>
+        <MudTd DataLabel="Trạng thái">
+            <MudSwitch T="bool" Value="@context.IsActive" Color="Color.Success" ReadOnly="true" />
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditPromotion(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeletePromotion(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<PromotionDTO> promotions = new();
+    private string searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        promotions = await Mediator.Send(new GetAllPromotionsQuery());
+    }
+
+    private bool FilterFunc(PromotionDTO element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task CreatePromotion()
+    {
+        await OpenDialog(Guid.Empty);
+    }
+
+    private async Task EditPromotion(Guid id)
+    {
+        await OpenDialog(id);
+    }
+
+    private async Task OpenDialog(Guid id)
+    {
+        var parameters = new DialogParameters { ["Id"] = id };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await _dialogService.ShowAsync<PromotionEdit>(id == Guid.Empty ? "Thêm khuyến mãi" : "Sửa khuyến mãi", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private void DeletePromotion(Guid id)
+    {
+        // TODO: Implement Delete
+        Snackbar.Add($"Xóa khuyến mãi: {id}", Severity.Info);
+    }
+}
